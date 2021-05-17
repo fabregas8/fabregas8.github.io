@@ -6,13 +6,17 @@
         <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
-        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/leaflet.css"><link rel="stylesheet" href="css/L.Control.Locate.min.css">
         <link rel="stylesheet" href="css/qgis2web.css"><link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/MarkerCluster.css">
+        <link rel="stylesheet" href="css/MarkerCluster.Default.css">
         <link rel="stylesheet" href="css/leaflet-search.css">
+        <link rel="stylesheet" href="css/leaflet-control-geocoder.Geocoder.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
         <style>
         #map {
-            width: 933px;
-            height: 501px;
+            width: 748px;
+            height: 534px;
         }
         </style>
         <title></title>
@@ -21,7 +25,9 @@
         <div id="map">
         </div>
         <script src="js/qgis2web_expressions.js"></script>
-        <script src="js/leaflet.js"></script>
+        <script src="js/leaflet.js"></script><script src="js/L.Control.Locate.min.js"></script>
+        <script src="js/multi-style-layer.js"></script>
+        <script src="js/leaflet-svg-shape-markers.min.js"></script>
         <script src="js/leaflet.rotatedMarker.js"></script>
         <script src="js/leaflet.pattern.js"></script>
         <script src="js/leaflet-hash.js"></script>
@@ -29,27 +35,67 @@
         <script src="js/rbush.min.js"></script>
         <script src="js/labelgun.min.js"></script>
         <script src="js/labels.js"></script>
+        <script src="js/leaflet-control-geocoder.Geocoder.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="js/leaflet.markercluster.js"></script>
         <script src="js/leaflet-search.js"></script>
-        <script src="data/arrondissementcameroun_0.js"></script>
-        <script src="data/Forets_Production_1.js"></script>
+        <script src="data/evodoula_0.js"></script>
+        <script src="data/Courbedeniveau_1.js"></script>
+        <script src="data/Lieuxdits_2.js"></script>
         <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+            highlightLayer.openPopup();
+        }
         var map = L.map('map', {
             zoomControl:true, maxZoom:28, minZoom:1
         })
         var hash = new L.Hash(map);
         map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
         var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        L.control.locate({locateOptions: {maxZoom: 19}}).addTo(map);
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0]
+        .innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0]
+        .className += ' fas fa-ruler';
         var bounds_group = new L.featureGroup([]);
         function setBounds() {
             if (bounds_group.getLayers().length) {
                 map.fitBounds(bounds_group.getBounds());
             }
+            map.setMaxBounds(map.getBounds());
         }
-        function pop_arrondissementcameroun_0(feature, layer) {
+        function pop_evodoula_0(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
             var popupContent = '<table>\
                     <tr>\
-                        <th scope="row">Name</th>\
-                        <td>' + (feature.properties['name'] !== null ? autolinker.link(feature.properties['name'].toLocaleString()) : '') + '</td>\
+                        <td colspan="2">' + (feature.properties['nom_arr'] !== null ? autolinker.link(feature.properties['nom_arr'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['nom_dep'] !== null ? autolinker.link(feature.properties['nom_dep'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['nom_reg'] !== null ? autolinker.link(feature.properties['nom_reg'].toLocaleString()) : '') + '</td>\
                     </tr>\
                     <tr>\
                         <td colspan="2">' + (feature.properties['wikipedia'] !== null ? autolinker.link(feature.properties['wikipedia'].toLocaleString()) : '') + '</td>\
@@ -58,9 +104,9 @@
             layer.bindPopup(popupContent, {maxHeight: 400});
         }
 
-        function style_arrondissementcameroun_0_0() {
+        function style_evodoula_0_0() {
             return {
-                pane: 'pane_arrondissementcameroun_0',
+                pane: 'pane_evodoula_0',
                 opacity: 1,
                 color: 'rgba(35,35,35,1.0)',
                 dashArray: '',
@@ -69,40 +115,41 @@
                 weight: 1.0, 
                 fill: true,
                 fillOpacity: 1,
-                fillColor: 'rgba(206,172,59,0.4745098039215686)',
+                fillColor: 'rgba(242,196,29,0.6588235294117647)',
                 interactive: true,
             }
         }
-        map.createPane('pane_arrondissementcameroun_0');
-        map.getPane('pane_arrondissementcameroun_0').style.zIndex = 400;
-        map.getPane('pane_arrondissementcameroun_0').style['mix-blend-mode'] = 'normal';
-        var layer_arrondissementcameroun_0 = new L.geoJson(json_arrondissementcameroun_0, {
+        map.createPane('pane_evodoula_0');
+        map.getPane('pane_evodoula_0').style.zIndex = 400;
+        map.getPane('pane_evodoula_0').style['mix-blend-mode'] = 'normal';
+        var layer_evodoula_0 = new L.geoJson(json_evodoula_0, {
             attribution: '',
             interactive: true,
-            dataVar: 'json_arrondissementcameroun_0',
-            layerName: 'layer_arrondissementcameroun_0',
-            pane: 'pane_arrondissementcameroun_0',
-            onEachFeature: pop_arrondissementcameroun_0,
-            style: style_arrondissementcameroun_0_0,
+            dataVar: 'json_evodoula_0',
+            layerName: 'layer_evodoula_0',
+            pane: 'pane_evodoula_0',
+            onEachFeature: pop_evodoula_0,
+            style: style_evodoula_0_0,
         });
-        bounds_group.addLayer(layer_arrondissementcameroun_0);
-        map.addLayer(layer_arrondissementcameroun_0);
-        function pop_Forets_Production_1(feature, layer) {
+        bounds_group.addLayer(layer_evodoula_0);
+        map.addLayer(layer_evodoula_0);
+        function pop_Courbedeniveau_1(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
             var popupContent = '<table>\
                     <tr>\
-                        <td colspan="2">' + (feature.properties['desc_type'] !== null ? autolinker.link(feature.properties['desc_type'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['nom_foret'] !== null ? autolinker.link(feature.properties['nom_foret'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['rfa_ha'] !== null ? autolinker.link(feature.properties['rfa_ha'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2"><strong>Statut de la classe</strong><br />' + (feature.properties['statu_clas'] !== null ? autolinker.link(feature.properties['statu_clas'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2"><strong>created_da</strong><br />' + (feature.properties['created_da'] !== null ? autolinker.link(feature.properties['created_da'].toLocaleString()) : '') + '</td>\
+                        <th scope="row">Altitude</th>\
+                        <td>' + (feature.properties['Contour'] !== null ? autolinker.link(feature.properties['Contour'].toLocaleString()) : '') + '</td>\
                     </tr>\
                     <tr>\
                         <td colspan="2">' + (feature.properties['wikipedia'] !== null ? autolinker.link(feature.properties['wikipedia'].toLocaleString()) : '') + '</td>\
@@ -111,57 +158,163 @@
             layer.bindPopup(popupContent, {maxHeight: 400});
         }
 
-        function style_Forets_Production_1_0() {
+        function style_Courbedeniveau_1_0() {
             return {
-                pane: 'pane_Forets_Production_1',
+                pane: 'pane_Courbedeniveau_1',
                 opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
+                color: 'rgba(102,45,9,1.0)',
                 dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(134,173,113,1.0)',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
                 interactive: true,
             }
         }
-        map.createPane('pane_Forets_Production_1');
-        map.getPane('pane_Forets_Production_1').style.zIndex = 401;
-        map.getPane('pane_Forets_Production_1').style['mix-blend-mode'] = 'normal';
-        var layer_Forets_Production_1 = new L.geoJson(json_Forets_Production_1, {
+        map.createPane('pane_Courbedeniveau_1');
+        map.getPane('pane_Courbedeniveau_1').style.zIndex = 401;
+        map.getPane('pane_Courbedeniveau_1').style['mix-blend-mode'] = 'normal';
+        var layer_Courbedeniveau_1 = new L.geoJson(json_Courbedeniveau_1, {
             attribution: '',
             interactive: true,
-            dataVar: 'json_Forets_Production_1',
-            layerName: 'layer_Forets_Production_1',
-            pane: 'pane_Forets_Production_1',
-            onEachFeature: pop_Forets_Production_1,
-            style: style_Forets_Production_1_0,
+            dataVar: 'json_Courbedeniveau_1',
+            layerName: 'layer_Courbedeniveau_1',
+            pane: 'pane_Courbedeniveau_1',
+            onEachFeature: pop_Courbedeniveau_1,
+            style: style_Courbedeniveau_1_0,
         });
-        bounds_group.addLayer(layer_Forets_Production_1);
-        map.addLayer(layer_Forets_Production_1);
+        bounds_group.addLayer(layer_Courbedeniveau_1);
+        map.addLayer(layer_Courbedeniveau_1);
+        function pop_Lieuxdits_2(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Nom des lieux</th>\
+                        <td>' + (feature.properties['nom_lieu'] !== null ? autolinker.link(feature.properties['nom_lieu'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['wikipedia'] !== null ? autolinker.link(feature.properties['wikipedia'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_Lieuxdits_2_0() {
+            return {
+                pane: 'pane_Lieuxdits_2',
+                radius: 10.666660000000004,
+                opacity: 1,
+                color: 'rgba(184,8,8,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(171,77,243,0.5215686274509804)',
+                interactive: true,
+            }
+        }
+        function style_Lieuxdits_2_1() {
+            return {
+                pane: 'pane_Lieuxdits_2',
+                radius: 8.400000000000002,
+                opacity: 1,
+                color: 'rgba(255,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(171,77,243,0.5215686274509804)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Lieuxdits_2');
+        map.getPane('pane_Lieuxdits_2').style.zIndex = 402;
+        map.getPane('pane_Lieuxdits_2').style['mix-blend-mode'] = 'normal';
+        var layer_Lieuxdits_2 = new L.geoJson.multiStyle(json_Lieuxdits_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Lieuxdits_2',
+            layerName: 'layer_Lieuxdits_2',
+            pane: 'pane_Lieuxdits_2',
+            onEachFeature: pop_Lieuxdits_2,
+            pointToLayers: [function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.shapeMarker(latlng, style_Lieuxdits_2_0(feature));
+            },function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.shapeMarker(latlng, style_Lieuxdits_2_1(feature));
+            },
+        ]});
+        var cluster_Lieuxdits_2 = new L.MarkerClusterGroup({showCoverageOnHover: false,
+            spiderfyDistanceMultiplier: 2});
+        cluster_Lieuxdits_2.addLayer(layer_Lieuxdits_2);
+
+        bounds_group.addLayer(layer_Lieuxdits_2);
+        cluster_Lieuxdits_2.addTo(map);
+        var osmGeocoder = new L.Control.Geocoder({
+            collapsed: true,
+            position: 'topleft',
+            text: 'Search',
+            title: 'Testing'
+        }).addTo(map);
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .className += ' fa fa-search';
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .title += 'Search for a place';
         var baseMaps = {};
-        L.control.layers(baseMaps,{'<img src="legend/Forets_Production_1.png" /> Forets_Production': layer_Forets_Production_1,'<img src="legend/arrondissementcameroun_0.png" />  arrondissement cameroun': layer_arrondissementcameroun_0,},{collapsed:false}).addTo(map);
+        L.control.layers(baseMaps,{'<img src="legend/Lieuxdits_2.png" /> Lieux-dits': cluster_Lieuxdits_2,'<img src="legend/Courbedeniveau_1.png" /> Courbe de niveau': layer_Courbedeniveau_1,'<img src="legend/evodoula_0.png" /> evodoula': layer_evodoula_0,},{collapsed:false}).addTo(map);
         map.on("zoomend", function(){
 
-                if (map.hasLayer(layer_arrondissementcameroun_0)) {
+                if (map.hasLayer(layer_evodoula_0)) {
                     if (map.getZoom() <= 8 && map.getZoom() >= 19) {
-                        layer_arrondissementcameroun_0.eachLayer(function (layer) {
+                        layer_evodoula_0.eachLayer(function (layer) {
                             layer.openTooltip();
                         });
                     } else {
-                        layer_arrondissementcameroun_0.eachLayer(function (layer) {
+                        layer_evodoula_0.eachLayer(function (layer) {
                             layer.closeTooltip();
                         });
                     }
                 }
-                if (map.hasLayer(layer_Forets_Production_1)) {
+                if (map.hasLayer(layer_Courbedeniveau_1)) {
                     if (map.getZoom() <= 8 && map.getZoom() >= 19) {
-                        layer_Forets_Production_1.eachLayer(function (layer) {
+                        layer_Courbedeniveau_1.eachLayer(function (layer) {
                             layer.openTooltip();
                         });
                     } else {
-                        layer_Forets_Production_1.eachLayer(function (layer) {
+                        layer_Courbedeniveau_1.eachLayer(function (layer) {
+                            layer.closeTooltip();
+                        });
+                    }
+                }
+                if (map.hasLayer(layer_Lieuxdits_2)) {
+                    if (map.getZoom() <= 8 && map.getZoom() >= 19) {
+                        layer_Lieuxdits_2.eachLayer(function (layer) {
+                            layer.openTooltip();
+                        });
+                    } else {
+                        layer_Lieuxdits_2.eachLayer(function (layer) {
                             layer.closeTooltip();
                         });
                     }
@@ -169,12 +322,12 @@
         });
         setBounds();
         var i = 0;
-        layer_arrondissementcameroun_0.eachLayer(function(layer) {
+        layer_evodoula_0.eachLayer(function(layer) {
             var context = {
                 feature: layer.feature,
                 variables: {}
             };
-            layer.bindTooltip((layer.feature.properties['name'] !== null?String('<div style="color: #000000; font-size: 7pt; font-family: \'Times New Roman\', sans-serif;">' + layer.feature.properties['name']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_arrondissementcameroun_0'});
+            layer.bindTooltip((layer.feature.properties['nom_arr'] !== null?String('<div style="color: #dba872; font-size: 10pt; font-family: \'Times New Roman\', sans-serif;">' + layer.feature.properties['nom_arr']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_evodoula_0'});
             labels.push(layer);
             totalMarkers += 1;
               layer.added = true;
@@ -182,56 +335,80 @@
               i++;
         });
         var i = 0;
-        layer_Forets_Production_1.eachLayer(function(layer) {
+        layer_Courbedeniveau_1.eachLayer(function(layer) {
             var context = {
                 feature: layer.feature,
                 variables: {}
             };
-            layer.bindTooltip((layer.feature.properties['nom_foret'] !== null?String('<div style="color: #000000; font-size: 7pt; font-family: \'Times New Roman\', sans-serif;">' + layer.feature.properties['nom_foret']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_Forets_Production_1'});
+            layer.bindTooltip((layer.feature.properties['Contour'] !== null?String('<div style="color: #000000; font-size: 7pt; font-family: \'Times New Roman\', sans-serif;">' + layer.feature.properties['Contour']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_Courbedeniveau_1'});
             labels.push(layer);
             totalMarkers += 1;
               layer.added = true;
               addLabel(layer, i);
               i++;
         });
-                if (map.hasLayer(layer_arrondissementcameroun_0)) {
+        var i = 0;
+        layer_Lieuxdits_2.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['nom_lieu'] !== null?String('<div style="color: #000000; font-size: 7pt; font-family: \'Times New Roman\', sans-serif;">' + layer.feature.properties['nom_lieu']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_Lieuxdits_2'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+                if (map.hasLayer(layer_evodoula_0)) {
                     if (map.getZoom() <= 8 && map.getZoom() >= 19) {
-                        layer_arrondissementcameroun_0.eachLayer(function (layer) {
+                        layer_evodoula_0.eachLayer(function (layer) {
                             layer.openTooltip();
                         });
                     } else {
-                        layer_arrondissementcameroun_0.eachLayer(function (layer) {
+                        layer_evodoula_0.eachLayer(function (layer) {
                             layer.closeTooltip();
                         });
                     }
                 }
-                if (map.hasLayer(layer_Forets_Production_1)) {
+                if (map.hasLayer(layer_Courbedeniveau_1)) {
                     if (map.getZoom() <= 8 && map.getZoom() >= 19) {
-                        layer_Forets_Production_1.eachLayer(function (layer) {
+                        layer_Courbedeniveau_1.eachLayer(function (layer) {
                             layer.openTooltip();
                         });
                     } else {
-                        layer_Forets_Production_1.eachLayer(function (layer) {
+                        layer_Courbedeniveau_1.eachLayer(function (layer) {
+                            layer.closeTooltip();
+                        });
+                    }
+                }
+                if (map.hasLayer(layer_Lieuxdits_2)) {
+                    if (map.getZoom() <= 8 && map.getZoom() >= 19) {
+                        layer_Lieuxdits_2.eachLayer(function (layer) {
+                            layer.openTooltip();
+                        });
+                    } else {
+                        layer_Lieuxdits_2.eachLayer(function (layer) {
                             layer.closeTooltip();
                         });
                     }
                 }
         map.addControl(new L.Control.Search({
-            layer: layer_Forets_Production_1,
+            layer: cluster_Courbedeniveau_1,
             initial: false,
             hideMarkerOnCollapse: true,
-            propertyName: 'desc_type'}));
+            propertyName: 'Contour'}));
         document.getElementsByClassName('search-button')[0].className +=
          ' fa fa-binoculars';
-        resetLabels([layer_arrondissementcameroun_0,layer_Forets_Production_1]);
+        resetLabels([layer_evodoula_0,layer_Courbedeniveau_1,layer_Lieuxdits_2]);
         map.on("zoomend", function(){
-            resetLabels([layer_arrondissementcameroun_0,layer_Forets_Production_1]);
+            resetLabels([layer_evodoula_0,layer_Courbedeniveau_1,layer_Lieuxdits_2]);
         });
         map.on("layeradd", function(){
-            resetLabels([layer_arrondissementcameroun_0,layer_Forets_Production_1]);
+            resetLabels([layer_evodoula_0,layer_Courbedeniveau_1,layer_Lieuxdits_2]);
         });
         map.on("layerremove", function(){
-            resetLabels([layer_arrondissementcameroun_0,layer_Forets_Production_1]);
+            resetLabels([layer_evodoula_0,layer_Courbedeniveau_1,layer_Lieuxdits_2]);
         });
         </script>
     </body>
